@@ -11,7 +11,7 @@ The goal was to create a reusable PowerShell script that could generate an ident
 
 Copper Creek Technologies needs to review employee accounts and security group memberships across its IT, HR, and Finance departments.
 
-As an IAM analyst, I was tasked with creating a PowerShell script to retrieve employee information, identify security group memberships, and export the results into a CSV report for review.
+As an IAM analyst, I was tasked with creating a PowerShell script to collect employee information, identify security group memberships, and export the results into a CSV report for review.
 
 ## Technologies Used
 
@@ -23,30 +23,22 @@ As an IAM analyst, I was tasked with creating a PowerShell script to retrieve em
 ## Objectives
 
 - Connect to Microsoft Entra ID using Microsoft Graph PowerShell.
-- Retrieve employee information and department attributes.
+- Retrieve employee account information and department attributes.
 - Identify security group memberships.
 - Automate identity inventory collection using PowerShell.
-- Export the collected data into a CSV report.
-- Validate the results against Microsoft Entra ID.
+- Export employee information into a CSV report.
+- Validate the report against Microsoft Entra ID.
 - Analyze account status and department membership.
 
 ---
 
 ## Implementation
 
-### Step 1 — Configure PowerShell
+### Step 1 — Install PowerShell 7
 
-Installed PowerShell 7 and verified the installation.
+Installed PowerShell 7 to use for Microsoft Graph PowerShell automation.
 
-I also installed the Microsoft Graph PowerShell modules needed for authentication, user management, and group queries.
-
-The modules included:
-
-- Microsoft.Graph.Authentication
-- Microsoft.Graph.Users
-- Microsoft.Graph.Groups
-
-Verified the PowerShell installation using:
+Verified the installation by running:
 
 ```powershell
 $PSVersionTable.PSVersion
@@ -54,7 +46,17 @@ $PSVersionTable.PSVersion
 
 ![PowerShell Version](screenshots/01-PowerShell-Version.png)
 
-Verified the Microsoft Graph modules using:
+### Step 2 — Install Microsoft Graph Modules
+
+Installed the Microsoft Graph PowerShell modules needed to connect to Entra ID and retrieve user and group information.
+
+```powershell
+Install-Module Microsoft.Graph.Authentication -Scope CurrentUser
+Install-Module Microsoft.Graph.Users -Scope CurrentUser
+Install-Module Microsoft.Graph.Groups -Scope CurrentUser
+```
+
+Verified the installed modules:
 
 ```powershell
 Get-Module Microsoft.Graph* -ListAvailable |
@@ -63,11 +65,11 @@ Select-Object Name, Version
 
 ![Microsoft Graph Modules](screenshots/02-Graph-Modules.png)
 
-### Step 2 — Connect to Microsoft Entra ID
+### Step 3 — Connect to Microsoft Graph
 
-Connected to my Microsoft Entra ID tenant using Microsoft Graph PowerShell.
+Connected to my Microsoft Entra ID lab tenant using Microsoft Graph PowerShell.
 
-I used the following read-only Microsoft Graph permissions:
+Used the following read-only permissions:
 
 - User.Read.All
 - Group.Read.All
@@ -81,7 +83,7 @@ Connect-MgGraph -Scopes @(
 ) -NoWelcome
 ```
 
-Verified the connection using:
+Verified the connection:
 
 ```powershell
 Get-MgContext |
@@ -90,11 +92,11 @@ Select-Object Account, TenantId, Scopes
 
 ![Microsoft Graph Connection](screenshots/03-Graph-Connection.png)
 
-### Step 3 — Retrieve Employee Information
+### Step 4 — Query Employee Accounts
 
 Used Microsoft Graph PowerShell to retrieve employee account information from Microsoft Entra ID.
 
-The query collected each employee's display name, user principal name, department, and account status.
+The query retrieved display names, user principal names, departments, and account status.
 
 ```powershell
 Get-MgUser -All -Property `
@@ -104,11 +106,11 @@ Select-Object DisplayName,UserPrincipalName,
 Format-Table -AutoSize
 ```
 
-I verified that the fictional employee accounts created in my earlier lab appeared in the results.
+Verified that the fictional employee accounts created in my earlier labs appeared in the results.
 
 ![Employee Identity Query](screenshots/04-User-Query.png)
 
-### Step 4 — Retrieve Security Group Memberships
+### Step 5 — Verify Security Groups
 
 Queried the security groups created in my earlier Entra ID labs.
 
@@ -118,7 +120,7 @@ The groups included:
 - SG-HR
 - SG-FINANCE
 
-Used PowerShell to retrieve the available security groups:
+Retrieved the available security groups:
 
 ```powershell
 Get-MgGroup -All |
@@ -126,7 +128,7 @@ Select-Object DisplayName, Id |
 Format-Table -AutoSize
 ```
 
-I also queried the members of the SG-IT security group.
+Also queried the members of the SG-IT security group:
 
 ```powershell
 $group = Get-MgGroup -Filter "displayName eq 'SG-IT'"
@@ -137,37 +139,67 @@ Select-Object DisplayName, Id
 
 ![Security Group Membership](screenshots/05-Group-Membership.png)
 
-### Step 5 — Create the Identity Automation Script
+### Step 6 — Create the Project Folders
 
-Created a PowerShell script named `Get-IdentityInventory.ps1` to automate identity inventory reporting.
+Created a local project directory to organize the PowerShell script, reports, and screenshots.
+
+The folder structure was:
+
+```text
+05-Identity-Automation/
+├── Get-IdentityInventory.ps1
+├── README.md
+├── reports/
+└── screenshots/
+```
+
+The reports folder was used to store generated CSV reports, while the screenshots folder was used to document the lab.
+
+### Step 7 — Create the Identity Inventory Script
+
+Created a PowerShell script named `Get-IdentityInventory.ps1` to automate the identity inventory process.
 
 The script performs the following tasks:
 
-1. Checks the Microsoft Graph connection.
-2. Locates the selected security groups.
-3. Retrieves direct user memberships from each group.
-4. Collects employee identity attributes.
-5. Creates an inventory containing account and group information.
+1. Verifies the Microsoft Graph connection.
+2. Searches for the selected security groups.
+3. Retrieves direct user members from each group.
+4. Collects employee identity information.
+5. Creates an inventory of employee and group membership data.
 6. Exports the results into a CSV report.
 
-The script collects:
+The report includes:
 
-- Display name
-- User principal name
+- DisplayName
+- UserPrincipalName
 - Department
-- Account enabled status
-- Security group
-- Report date
+- AccountEnabled
+- SecurityGroup
+- ReportDate
 
-The script uses read-only Microsoft Graph commands and does not modify employee accounts or group memberships.
+The script uses read-only Microsoft Graph queries and does not modify employee accounts or security groups.
 
 **PowerShell Script:**
 
 [View Get-IdentityInventory.ps1](Get-IdentityInventory.ps1)
 
-### Step 6 — Execute the Automation Script
+### Step 8 — Navigate to the Project Directory
 
-Executed the PowerShell script to automatically collect employee information and security group memberships.
+Opened PowerShell 7 and navigated to the Lab 05 project folder.
+
+```powershell
+cd "$HOME\Documents\entra-id-iam-labs\05-Identity-Automation"
+```
+
+Verified that the PowerShell script and project folders were present:
+
+```powershell
+Get-ChildItem
+```
+
+### Step 9 — Execute the PowerShell Script
+
+Executed the identity inventory script to automatically collect employee information and security group memberships.
 
 ```powershell
 .\Get-IdentityInventory.ps1
@@ -175,11 +207,13 @@ Executed the PowerShell script to automatically collect employee information and
 
 The script successfully queried all three security groups and generated an identity inventory containing 10 membership records.
 
-The report was saved as `IdentityInventory.csv` in the reports folder.
+The results were exported to:
+
+`reports/IdentityInventory.csv`
 
 ![PowerShell Script Execution](screenshots/06-Script-Execution.png)
 
-### Step 7 — Review the CSV Report
+### Step 10 — Open and Review the CSV Report
 
 Opened the generated CSV report in Microsoft Excel to review the collected employee information.
 
@@ -192,27 +226,27 @@ The report contained six columns:
 - SecurityGroup
 - ReportDate
 
-The report contained 10 fictional employee accounts across the IT, HR, and Finance departments.
+The report contained 10 membership records across the IT, HR, and Finance departments.
 
 ![CSV Identity Inventory Report](screenshots/07-CSV-Inventory.png)
 
-### Step 8 — Validate Security Group Memberships
+### Step 11 — Validate Group Membership in Microsoft Entra ID
 
-Validated the accuracy of the generated report by comparing the CSV results against Microsoft Entra ID.
+Validated the accuracy of the exported report by comparing the CSV results against Microsoft Entra ID.
 
 Navigated to:
 
 **Microsoft Entra admin center > Entra ID > Groups > All groups > SG-IT > Members**
 
-The SG-IT security group contained three employees, matching the three membership records in the exported CSV report.
+The SG-IT security group contained three employees, matching the three membership records shown in the CSV report.
 
-This helped confirm that the PowerShell script accurately retrieved the security group membership information.
+I compared the membership information to confirm that the PowerShell script retrieved accurate results.
 
 ![Security Group Membership Validation](screenshots/08-Membership-Validation.png)
 
-### Step 9 — Analyze the Identity Inventory
+### Step 12 — Analyze the CSV Report Using PowerShell
 
-Used PowerShell to analyze the generated CSV report.
+Used PowerShell to analyze the generated identity inventory report.
 
 **Count employees by department:**
 
@@ -222,7 +256,7 @@ Group-Object Department |
 Select-Object Name, Count
 ```
 
-The results showed:
+The results were:
 
 | Department | Employees |
 |---|---|
@@ -248,7 +282,7 @@ $users = Import-Csv ".\reports\IdentityInventory.csv"
 ($users | Select-Object -Unique UserPrincipalName).Count
 ```
 
-The command confirmed that the report contained 10 unique employee accounts.
+The result confirmed that the report contained 10 unique employee accounts.
 
 ![PowerShell Report Analysis](screenshots/09-Report-Analysis.png)
 
@@ -258,17 +292,17 @@ The command confirmed that the report contained 10 unique employee accounts.
 
 Successfully created and executed a PowerShell script to automate identity inventory reporting in Microsoft Entra ID.
 
-The script retrieved employee information and direct security group memberships across three departments.
+The script collected employee information and direct security group memberships across three departments.
 
 **Final Results:**
 
 - 10 unique employee accounts identified.
-- 3 security groups queried.
+- 3 security groups successfully queried.
 - 3 IT employees.
 - 4 HR employees.
 - 3 Finance employees.
 - 0 disabled accounts identified in the report.
-- CSV report successfully generated.
+- CSV report generated successfully.
 - SG-IT membership validated against Microsoft Entra ID.
 
 ## Lessons Learned
@@ -277,7 +311,7 @@ This lab helped me understand how Microsoft Graph PowerShell can be used to auto
 
 I learned how to connect to Microsoft Entra ID, retrieve employee information, query security group memberships, and generate CSV reports using PowerShell.
 
-I also gained experience validating automated results and using PowerShell to analyze account status and department memberships.
+I also gained experience validating automated reports against Microsoft Entra ID and using PowerShell to analyze identity data.
 
 This showed me how automation can reduce manual work when performing IAM inventory and access auditing tasks.
 
@@ -297,4 +331,4 @@ Some improvements I could make to this project include:
 - Detecting mismatches between employee departments and security group assignments.
 - Automatically generating inventory reports on a schedule.
 - Adding error logging and exception handling.
-- Expanding the script to review privileged role assignments.
+- Expanding reporting to include privileged role assignments.
